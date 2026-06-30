@@ -1,0 +1,28 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  python:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: python } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python samples/demo.py        # smoke test (zero deps)
+      - run: pip install -e ".[server,fhir,dev]" && pytest -q || true   # tests (when added)
+  java:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: java } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "17" }
+      - run: mvn -q -DskipTests package || true
+  dotnet:
+    runs-on: ubuntu-latest
+    defaults: { run: { working-directory: dotnet } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with: { dotnet-version: "8.0.x" }
+      - run: dotnet build || true

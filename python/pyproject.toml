@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ode-360x-adapter"
+version = "0.1.0"
+description = "360/ODE Adapter — pluggable edge server bridging IHE 360X and ODE Native (FHIR R4 / COW)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Oral Health Interoperability Alliance (OHIA)" }]
+
+# The mapping core has ZERO required runtime dependencies (stdlib only), so the
+# demo and the engine run anywhere. Transports/servers are optional extras.
+dependencies = []
+
+[project.optional-dependencies]
+server = ["fastapi>=0.110", "uvicorn[standard]>=0.29", "pydantic>=2.6"]
+fhir   = ["httpx>=0.27"]          # live FHIR backends (generic-r4 non-dry-run, onyx)
+direct = []                        # add your Direct/HISP + S/MIME deps here
+dev    = ["pytest>=8", "ruff", "mypy"]
+
+[tool.setuptools.packages.find]
+include = ["ode_adapter*"]
+
+# Third-party plugins can register here; the registry loads this group lazily.
+# [project.entry-points."ode_adapter.plugins"]
+# my-backend = "my_pkg.my_backend"
+
+[tool.ruff]
+line-length = 100

@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <RootNamespace>Ode.Adapter</RootNamespace>
+  </PropertyGroup>
+  <!-- Dependency-free, like the Python reference: only System.Text.Json + System.Xml.Linq. -->
+</Project>

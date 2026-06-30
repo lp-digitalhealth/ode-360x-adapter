@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sample 360X Referral Request payload: C-CDA Referral Note (LOINC 57133-1).
+     Scenario: Oncology refers a patient for dental clearance prior to head & neck
+     radiation. Synthetic patient; real NPIs would be used with synthetic data per
+     OHIA test-data rules. Illustrative structure for the reference transformer. -->
+<ClinicalDocument xmlns="urn:hl7-org:v3">
+  <realmCode code="US"/>
+  <typeId root="2.16.840.1.113883.1.3" extension="POCD_HD000040"/>
+  <templateId root="2.16.840.1.113883.10.20.22.1.14"/>
+  <code code="57133-1" codeSystem="2.16.840.1.113883.6.1" displayName="Referral note"/>
+  <title>Referral for Dental Clearance Prior to Radiation Therapy</title>
+  <effectiveTime value="20260615120000"/>
+  <confidentialityCode code="N" codeSystem="2.16.840.1.113883.5.25"/>
+
+  <recordTarget>
+    <patientRole>
+      <id root="2.16.840.1.113883.19.5" extension="MRN-558211"/>
+      <patient>
+        <name><given>Wilma</given><family>Stonewright</family></name>
+        <administrativeGenderCode code="F"
+            codeSystem="2.16.840.1.113883.5.1"/>
+        <birthTime value="19580312"/>
+      </patient>
+    </patientRole>
+  </recordTarget>
+
+  <author>
+    <time value="20260615120000"/>
+    <assignedAuthor>
+      <id root="2.16.840.1.113883.4.6" extension="1801234567"/>
+      <assignedPerson>
+        <name><given>Aaron</given><family>Reyes</family></name>
+      </assignedPerson>
+      <representedOrganization>
+        <name>Riverbend Oncology Associates</name>
+      </representedOrganization>
+    </assignedAuthor>
+  </author>
+
+  <component>
+    <structuredBody>
+
+      <!-- Reason for referral (LOINC 42349-1) -->
+      <component>
+        <section>
+          <code code="42349-1" codeSystem="2.16.840.1.113883.6.1"
+                displayName="Reason for referral"/>
+          <title>Reason for Referral</title>
+          <text>Dental clearance requested prior to initiation of head and neck
+                radiation therapy. Please evaluate and remediate any active dental
+                disease and provide clearance.</text>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <code code="42349-1" codeSystem="2.16.840.1.113883.6.1"/>
+              <value xsi:type="CD" code="183932001"
+                     codeSystem="2.16.840.1.113883.6.96"
+                     displayName="Procedure requested"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+            </observation>
+          </entry>
+        </section>
+      </component>
+
+      <!-- Problems (LOINC 11450-4) -->
+      <component>
+        <section>
+          <code code="11450-4" codeSystem="2.16.840.1.113883.6.1"
+                displayName="Problem list"/>
+          <title>Problems</title>
+          <text>Malignant neoplasm of the tongue.</text>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <code code="55607006" codeSystem="2.16.840.1.113883.6.96"
+                    displayName="Problem"/>
+              <value xsi:type="CD" code="363349007"
+                     codeSystem="2.16.840.1.113883.6.96"
+                     displayName="Malignant tumor of tongue"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+            </observation>
+          </entry>
+        </section>
+      </component>
+
+      <!-- Medications (LOINC 10160-0) -->
+      <component>
+        <section>
+          <code code="10160-0" codeSystem="2.16.840.1.113883.6.1"
+                displayName="History of medication use"/>
+          <title>Medications</title>
+          <text>Ondansetron 8 mg.</text>
+          <entry>
+            <substanceAdministration classCode="SBADM" moodCode="EVN">
+              <consumable>
+                <manufacturedProduct>
+                  <manufacturedMaterial>
+                    <code code="312086" codeSystem="2.16.840.1.113883.6.88"
+                          displayName="Ondansetron 8 MG Oral Tablet"/>
+                  </manufacturedMaterial>
+                </manufacturedProduct>
+              </consumable>
+            </substanceAdministration>
+          </entry>
+        </section>
+      </component>
+
+      <!-- Allergies (LOINC 48765-2) -->
+      <component>
+        <section>
+          <code code="48765-2" codeSystem="2.16.840.1.113883.6.1"
+                displayName="Allergies and adverse reactions"/>
+          <title>Allergies</title>
+          <text>Penicillin allergy.</text>
+          <entry>
+            <observation classCode="OBS" moodCode="EVN">
+              <value xsi:type="CD" code="373270004"
+                     codeSystem="2.16.840.1.113883.6.96"
+                     displayName="Penicillin"
+                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+            </observation>
+          </entry>
+        </section>
+      </component>
+
+    </structuredBody>
+  </component>
+</ClinicalDocument>

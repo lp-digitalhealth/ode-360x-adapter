@@ -1,0 +1,40 @@
+WHERE EVERYTHING GOES (repo root = ode-360x-adapter/)
+
+  spec/                              language-neutral contract (source of truth)
+    README.md
+    contract/ports.md
+    contract/conformance-checklist.md
+    mapping/transactions.md
+    mapping/content.md
+    mapping/loss-profile.md
+    mapping/attachments.md           supporting images: embed vs capability link
+    use-cases/uc01-head-neck-cancer.md
+    use-cases/uc03-pediatric-referral.md
+
+  python/                            the reference implementation
+    README.md  ARCHITECTURE.md  TODO.md  pyproject.toml  requirements.txt
+    ode_adapter/                     the package
+      __init__.py config.py ports.py registry.py engine.py
+      state_machine.py ccda_to_fhir.py fhir_to_ccda.py hl7v2.py xdm.py stores.py app.py
+      plugins/__init__.py
+      plugins/fhir/{generic_r4.py, onyx.py}
+      plugins/ihe/{json_envelope.py, xdm_zip.py, direct_smtp.py, http_transport.py}
+    samples/{referral_request.xml, demo.py, inbound_pcc55.json}
+    tools/                           test/reference utilities (the stub 360X peer)
+      stub_360x_core.py              receiver core (pure python, tested)
+      stub_360x_sender.py            sender: builds + sends PCC-55/58 to the adapter
+      stub_360x_server.py            thin FastAPI wrapper (receive + send endpoints)
+      README.md
+    tests/                           45 passing (stdlib runner; pytest-compatible)
+      test_adapter.py  test_stub_360x.py  test_stub_sender.py
+
+  java/                              ports as Java interfaces + pom + STATUS/README
+  dotnet/                            ports as C# interfaces + csproj + STATUS/README
+
+  docs/                              fhir-servers.md, running-a-fhir-server.md
+  docker/                            Dockerfile.python, docker-compose.yml
+  wiki/Home.md
+  .github/workflows/ci.yml
+  README.md  PROGRAM-PLAN.md  CONTRIBUTING.md  CHANGELOG.md  LICENSE  .gitignore
+
+NOTE: architecture doc = python/ARCHITECTURE.md. Monorepo overview = top README.md.

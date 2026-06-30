@@ -1,0 +1,10 @@
+# Core mapping engine + demo: NO dependencies (Python stdlib only).
+#   python samples/demo.py        # runs with nothing installed
+
+# To run the HTTP server (ode_adapter.app) install the "server" + "fhir" extras:
+#   pip install -e ".[server,fhir]"
+# or pin directly:
+fastapi>=0.110
+uvicorn[standard]>=0.29
+pydantic>=2.6
+httpx>=0.27

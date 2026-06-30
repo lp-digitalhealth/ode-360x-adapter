@@ -1,0 +1,23 @@
+# Connectathon-in-a-box: a FHIR server + the Python adapter.
+# Usage:  docker compose -f docker/docker-compose.yml up --build
+services:
+  hapi:
+    image: hapiproject/hapi:latest
+    ports: ["8080:8080"]
+    environment:
+      hapi.fhir.fhir_version: R4
+
+  adapter-python:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.python
+    depends_on: [hapi]
+    ports: ["8000:8000"]
+    environment:
+      ODE_ADAPTER_ODE_BASE_URL: http://hapi:8080/fhir
+      ODE_ADAPTER_FHIR_BACKEND: generic-r4
+      ODE_ADAPTER_IHE_CODEC: json-envelope
+      ODE_ADAPTER_IHE_TRANSPORT: capture
+      ODE_ADAPTER_DRY_RUN: "false"
+
+  # java and dotnet services to be added as they reach a runnable state (Phase 3).
