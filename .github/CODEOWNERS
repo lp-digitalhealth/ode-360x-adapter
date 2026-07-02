@@ -1,0 +1,15 @@
+# Code owners for the ODE <-> 360X adapter.
+#
+# When "Require review from Code Owners" is enabled in branch protection, the
+# owners listed here must approve changes to the matching paths. Add committers as
+# they are onboarded (see CHANGE_MANAGEMENT.md).
+
+# Default owner for everything in the repo.
+*                       @marciantemark
+
+# The shared contract is the source of truth; guard it closely.
+/spec/                  @marciantemark
+
+# Governance and repo configuration.
+/CHANGE_MANAGEMENT.md    @marciantemark
+/.github/                @marciantemark
