@@ -60,6 +60,20 @@ cd python && pip install -e ".[server,fhir]" && uvicorn ode_adapter.app:app --po
 cd node && npm start        # or: node server.js
 ```
 
+**Windows (PowerShell)** — run each command on its own line (PowerShell has no `&&`
+chaining) and invoke uvicorn as a module (the `uvicorn` script is often not on
+`PATH`):
+
+```powershell
+# 1) bridge  (first run only: pip install -e ".[server,fhir]")
+cd python
+python -m uvicorn ode_adapter.app:app --port 8000
+
+# 2) UI  (another terminal)
+cd node
+node server.js
+```
+
 Open <http://localhost:4000>. In dry-run the Inbox reads the bridge's per-episode
 cache (what it would have written); flip `ODE_ADAPTER_DRY_RUN=false` + point
 `ODE_ADAPTER_ODE_BASE_URL` at a FHIR server to read live.

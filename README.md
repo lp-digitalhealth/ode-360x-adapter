@@ -30,6 +30,10 @@ python python/samples/demo.py
 docker compose -f docker/docker-compose.yml up --build
 ```
 
+To run the interactive browser demo (bridge + UI), see
+[`node/README.md`](node/README.md) — it has copy-paste run steps, including a
+Windows/PowerShell variant.
+
 ## Principle
 
 One contract, three languages. Every implementation satisfies `spec/`; if behavior
