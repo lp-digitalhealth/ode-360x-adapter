@@ -22,11 +22,23 @@ class Episode:
     task_id: str | None = None
     service_request_id: str | None = None
     status: str = "requested"
+    # COW: granular dental business-status (see config.COW_BUSINESS_STATUS).
+    business_status: str | None = None
+    # Which side opened this episode in the harness: "dental" or "medical".
+    initiated_by: str | None = None
     created: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     history: list[str] = field(default_factory=list)
+    # The FHIR the bridge wrote for this episode, so a harness "inbox" can read it
+    # (in dry-run there is no live server to query). Newest last.
+    inbox: list[dict] = field(default_factory=list)
 
     def note(self, msg: str) -> None:
         self.history.append(f"{datetime.now(timezone.utc).isoformat()} {msg}")
+
+    def add_to_inbox(self, resources: list[dict]) -> None:
+        for res in resources or []:
+            self.inbox.append({k: v for k, v in res.items()
+                               if not k.startswith("_")})
 
 
 class CorrelationStore:

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Symmetric 360X Edge Server — Reply Simulators</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">360X</span>
+      <div>
+        <h1>Symmetric Edge Server — Reply Simulators</h1>
+        <p class="sub">Enter a referral, drive every 360X ⟷ COW transaction through the live bridge</p>
+      </div>
+    </div>
+    <div class="topbar-right">
+      <div class="persona-toggle" id="personaToggle">
+        <button data-persona="dental" class="active">Dental PMS</button>
+        <button data-persona="medical">Medical EHR</button>
+      </div>
+      <div class="health" id="health"><span class="dot"></span><span id="healthText">checking…</span></div>
+    </div>
+  </header>
+
+  <main class="workspace">
+    <!-- Primary: data entry -->
+    <section class="col-main">
+      <div class="card persona-banner" id="personaBanner">
+        <h2 id="personaTitle">Dental PMS</h2>
+        <p id="personaRole" class="muted"></p>
+      </div>
+
+      <div class="card term-guide" id="termGuide">
+        <button type="button" class="term-toggle" id="termToggle" aria-expanded="false">
+          <span class="tg-title">Terminology guide — dental &harr; medical</span>
+          <span class="term-caret">&#9656;</span>
+        </button>
+        <div class="term-body" id="termBody" hidden>
+          <p class="muted">Same referral, two vocabularies. This maps what each side calls things (and the FHIR / code systems underneath) so dental and medical software teams can learn each other's language.</p>
+          <table class="term-table" id="termTable"></table>
+        </div>
+      </div>
+
+      <div class="workflow" id="workflow">
+        <button type="button" data-view="initiate" class="active">
+          <span class="wf-step">Step 1</span>
+          <span class="wf-label">Initiate referral</span>
+        </button>
+        <button type="button" data-view="replies">
+          <span class="wf-step">Step 2</span>
+          <span class="wf-label">Simulate replies &amp; workflow</span>
+        </button>
+      </div>
+
+      <form class="card form" id="intakeForm" autocomplete="off">
+        <div class="form-head">
+          <h3>Referral intake</h3>
+          <span class="muted" id="statusTag"></span>
+        </div>
+        <p class="muted intake-lede" id="intakeLede"></p>
+
+        <!-- 1 · Referral -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>1 · Referral</span><span class="muted" id="dirHint"></span></div>
+          <div class="grid">
+            <div class="field">
+              <label for="referralId">Referral ID</label>
+              <input id="referralId" type="text" value="REF-1001" />
+            </div>
+            <div class="field">
+              <label for="priority">Priority</label>
+              <select id="priority">
+                <option value="routine">Routine</option>
+                <option value="urgent">Urgent</option>
+                <option value="asap">ASAP</option>
+                <option value="stat">STAT</option>
+              </select>
+            </div>
+            <div class="field span2">
+              <label for="reason">Reason for referral</label>
+              <textarea id="reason" rows="2"></textarea>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 2 · Patient -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>2 · Patient</span></div>
+          <div class="grid">
+            <div class="field"><label for="p_given">First name</label><input id="p_given" type="text" /></div>
+            <div class="field"><label for="p_family">Last name</label><input id="p_family" type="text" /></div>
+            <div class="field"><label for="p_mrn">MRN</label><input id="p_mrn" type="text" /></div>
+            <div class="field"><label for="p_birthDate">Date of birth</label><input id="p_birthDate" type="date" /></div>
+            <div class="field">
+              <label for="p_gender">Sex</label>
+              <select id="p_gender">
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="other">Other</option>
+                <option value="unknown">Unknown</option>
+              </select>
+            </div>
+            <div class="field"><label for="p_phone">Phone</label><input id="p_phone" type="text" /></div>
+            <div class="field span2"><label for="p_line">Address</label><input id="p_line" type="text" /></div>
+            <div class="grid3 span2">
+              <div class="field"><label for="p_city">City</label><input id="p_city" type="text" /></div>
+              <div class="field"><label for="p_state">State</label><input id="p_state" type="text" /></div>
+              <div class="field"><label for="p_zip">ZIP</label><input id="p_zip" type="text" /></div>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 3 · Insurance / coverage -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>3 · Insurance &amp; coverage</span><span class="muted">enables billing</span></div>
+          <div class="grid">
+            <div class="field span2"><label for="c_payer">Payer / health plan</label><input id="c_payer" type="text" /></div>
+            <div class="field"><label for="c_member">Member / subscriber ID</label><input id="c_member" type="text" /></div>
+            <div class="field"><label for="c_group">Group number</label><input id="c_group" type="text" /></div>
+            <div class="field"><label for="c_plan">Plan</label><input id="c_plan" type="text" /></div>
+            <div class="field">
+              <label for="c_rel">Relationship to subscriber</label>
+              <select id="c_rel">
+                <option value="self">Self</option>
+                <option value="spouse">Spouse</option>
+                <option value="child">Child</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 4 · Referring provider -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>4 · Referring provider</span><span class="muted" id="referBy"></span></div>
+          <div class="grid">
+            <div class="field span2"><label for="rp_name">Name</label><input id="rp_name" type="text" /></div>
+            <div class="field"><label for="rp_npi">NPI</label><input id="rp_npi" type="text" /></div>
+            <div class="field"><label for="rp_spec">Specialty / taxonomy</label><input id="rp_spec" type="text" /></div>
+            <div class="field span2"><label for="rp_org">Organization</label><input id="rp_org" type="text" /></div>
+            <div class="field"><label for="rp_phone">Phone</label><input id="rp_phone" type="text" /></div>
+          </div>
+        </fieldset>
+
+        <!-- 5 · Rendering provider -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>5 · Rendering / consulting provider</span><span class="muted" id="renderTo"></span></div>
+          <div class="grid">
+            <div class="field span2"><label for="nd_name">Name</label><input id="nd_name" type="text" /></div>
+            <div class="field"><label for="nd_npi">NPI</label><input id="nd_npi" type="text" /></div>
+            <div class="field"><label for="nd_spec">Specialty / taxonomy</label><input id="nd_spec" type="text" /></div>
+            <div class="field span2"><label for="nd_org">Organization</label><input id="nd_org" type="text" /></div>
+          </div>
+        </fieldset>
+
+        <!-- 6 · Requested service & diagnoses (labels are persona-aware) -->
+        <fieldset class="subsection">
+          <div class="section-title"><span id="sec6Title">6 · Requested service &amp; diagnoses</span><span class="muted">enables treat + bill</span></div>
+          <div class="grid">
+            <div class="field span2"><label for="s_display" id="s_display_label">Requested service</label><input id="s_display" type="text" /></div>
+            <div class="field"><label for="s_code">Service code</label><input id="s_code" type="text" /></div>
+            <div class="field">
+              <label for="s_system">Code system</label>
+              <select id="s_system">
+                <option value="cpt">CPT</option>
+                <option value="hcpcs">HCPCS</option>
+                <option value="loinc">LOINC</option>
+                <option value="snomed">SNOMED</option>
+              </select>
+            </div>
+            <div class="field span2 dx-collection">
+              <div class="dx-head">
+                <label id="dxSectionLabel">Diagnoses</label>
+                <span class="muted" id="dxSectionHint"></span>
+              </div>
+              <div id="dxRows"></div>
+              <button type="button" class="btn ghost small" id="dxAdd">+ Add condition / diagnosis</button>
+            </div>
+          </div>
+        </fieldset>
+
+        <!-- 7 · Clinical information -->
+        <fieldset class="subsection">
+          <div class="section-title"><span>7 · Clinical information</span><span class="muted">history, findings, justification</span></div>
+          <div class="grid">
+            <div class="field span2 dx-collection">
+              <div class="dx-head">
+                <label>Current medications</label>
+                <span class="muted">the patient's active medication list (RxNorm)</span>
+              </div>
+              <div id="medRows"></div>
+              <button type="button" class="btn ghost small" id="medAdd">+ Add medication</button>
+            </div>
+            <div class="field span2"><label for="supporting">Supporting clinical information</label><textarea id="supporting" rows="3"></textarea></div>
+          </div>
+        </fieldset>
+
+        <button type="button" class="btn primary block lg" id="initiateBtn">Initiate referral</button>
+        <p class="muted initiate-hint" id="initiateHint"></p>
+        <div class="cancel-row">
+          <button type="button" class="btn ghost small" id="cancelBtn">Cancel this referral (PCC-58)</button>
+          <span class="muted">Withdraw the referral you initiated — revokes the Task + ServiceRequest.</span>
+        </div>
+      </form>
+
+      <div class="card" id="replyCard" hidden>
+        <div class="form-head">
+          <h3>Simulate replies &amp; workflow</h3>
+          <span class="muted" id="replyRef"></span>
+        </div>
+        <p class="muted" id="replyIntro"></p>
+
+        <!-- Prominent output: the 360X payload received FROM the rendering side -->
+        <div id="replyOutput" class="reply-output" hidden></div>
+
+        <div class="reply-cards" id="replyList"></div>
+      </div>
+    </section>
+
+    <!-- Secondary rail: state -->
+    <aside class="col-rail">
+      <div class="card status-card">
+        <h3>Referral status</h3>
+        <div class="status-big" id="statusBig">—</div>
+        <div class="business" id="statusBusiness"></div>
+        <div class="muted" id="statusSource"></div>
+      </div>
+      <div class="card">
+        <div class="form-head">
+          <h3>Episodes</h3>
+          <button class="btn ghost small" id="refreshEpisodes">Refresh</button>
+        </div>
+        <div class="episodes" id="episodes"><p class="muted">No episodes yet.</p></div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- De-emphasized: payload + FHIR inspector, at the bottom, collapsible -->
+  <section class="inspector" id="inspector">
+    <div class="inspector-bar" id="inspectorBar">
+      <button class="collapse" id="collapseBtn" aria-label="toggle">▾</button>
+      <span class="insp-title">Payload &amp; FHIR inspector</span>
+      <div class="tabs" id="tabs">
+        <button data-tab="result" class="active">Result</button>
+        <button data-tab="inbox">Inbox (FHIR read)</button>
+        <button data-tab="crosswalk">Crosswalk</button>
+      </div>
+      <span class="insp-hint muted" id="inspHint">the wire payloads live here — data entry drives them above</span>
+    </div>
+
+    <div class="inspector-body" id="inspectorBody">
+      <div class="tab-panel" id="tab-result">
+        <div class="export-bar" id="exportBar" hidden>
+          <span class="muted">Export:</span>
+          <a class="chip" id="exp-all" target="_blank">All (.json)</a>
+          <a class="chip" id="exp-envelope" target="_blank">360X envelope</a>
+          <a class="chip" id="exp-hl7" target="_blank">HL7 v2</a>
+          <a class="chip" id="exp-cda" target="_blank">C-CDA</a>
+          <a class="chip" id="exp-fhir" target="_blank">FHIR body</a>
+          <span class="result-line muted" id="resultLine"></span>
+        </div>
+        <div class="split">
+          <div>
+            <h4>Request <span class="muted" id="reqEndpoint"></span></h4>
+            <pre id="reqJson" class="code">Run an action above to see the payload.</pre>
+          </div>
+          <div>
+            <h4>Bridge response</h4>
+            <pre id="respJson" class="code">—</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-panel" id="tab-inbox" hidden>
+        <div class="form-head">
+          <h4>Inbox — what the <span id="inboxWho">PMS</span> reads from FHIR <span class="muted" id="inboxMeta"></span></h4>
+          <button class="btn ghost small" id="refreshInbox">Refresh</button>
+        </div>
+        <div id="inboxList" class="inbox"><p class="muted">Run an action, then refresh.</p></div>
+      </div>
+
+      <div class="tab-panel" id="tab-crosswalk" hidden>
+        <table class="xtable" id="xtable"></table>
+      </div>
+    </div>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>

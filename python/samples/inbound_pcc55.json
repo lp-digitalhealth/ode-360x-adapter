@@ -4,7 +4,7 @@
   "sender_direct_address": "referrals@oncology.direct.example.org",
   "recipient_direct_address": "intake@dentalgroup.direct.example.org",
   "transaction": "PCC-55",
-  "hl7v2": "MSH|^~\\&|OHIA-360ODE-ADAPTER|OHIA|EHR|ORG|20260629062937||OMG^O19|ADP20260629062937|P|2.5.1\rORC|NW|REF-1001|||\r",
+  "hl7v2": "MSH|^~\\&|OHIA-360ODE-ADAPTER|OHIA|EHR|ORG|20260630173638||OMG^O19|ADP20260630173638|P|2.5.1\rORC|NW|REF-1001|||\r",
   "documents": [
     {
       "id": "doc-1",

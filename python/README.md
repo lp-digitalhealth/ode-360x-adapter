@@ -62,7 +62,7 @@ the dental system (ODE Native) is the Referral Recipient / COW Fulfiller.
 |---|---|---|---|
 | 1 — Transport bridge | `xdm.py`, `hl7v2.py`, `plugins/ihe/*` | Direct/XDM/v2 ↔ FHIR REST | mechanical |
 | 2 — Workflow state | `state_machine.py` | 360X transactions ↔ `Task` state machine | clean ~1:1 |
-| 3 — Content transform | `ccda_to_fhir.py`, `fhir_to_ccda.py` | C-CDA ↔ FHIR (+ dental) | lossy (the hard part) |
+| 3 — Content transform | `ccda_to_fhir.py`, `fhir_to_ccda.py` | C-CDA ↔ FHIR (+ dental) | degraded (the hard part) |
 | Ports / plugins | `ports.py`, `registry.py`, `plugins/*` | swappable FHIR backend + IHE transport | — |
 | Correlation / directory | `stores.py` | episode state, addressing | stateful |
 | Orchestration | `engine.py` | ties it together, both directions | — |

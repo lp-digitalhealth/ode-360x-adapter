@@ -1,0 +1,14 @@
+{
+  "name": "ode-360x-adapter-demo-ui",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Zero-dependency Node UI that drives the OHIA 360/ODE adapter across the IHE 360X <-> FHIR R4 bridge.",
+  "license": "Apache-2.0",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=14"
+  },
+  "scripts": {
+    "start": "node server.js"
+  }
+}

@@ -56,19 +56,56 @@ def parse(raw: str) -> V2Message:
             msg.message_type = f[8] if len(f) > 8 else ""
             msg.control_id = f[9] if len(f) > 9 else ""
         elif sid == "ORC":
-            # ORC-2 placer order number used as referral id; ORC-5 order status
+            # ORC-2 placer order number used as referral id; ORC-5 order status.
+            # Reply content (degraded 360X side): ORC-12 accepting provider,
+            # ORC-15 expected-by date, ORC-16 coded status reason.
             if len(f) > 2 and f[2]:
                 msg.referral_id = f[2]
             if len(f) > 5 and f[5]:
                 msg.order_status = f[5]
+            if len(f) > 12 and f[12]:
+                msg.fields["accepting_provider"] = f[12]
+            if len(f) > 15 and f[15]:
+                msg.fields["period_end"] = f[15]
+            if len(f) > 16 and f[16]:
+                msg.fields["status_reason"] = f[16]
+        elif sid == "NTE":
+            # NTE-3 comment carries the free-text reply note / reason (degraded).
+            if len(f) > 3 and f[3]:
+                msg.fields["note"] = f[3]
         elif sid == "ZRF" and len(f) > 1:  # 360X referral-id convention (illustrative)
             msg.referral_id = msg.referral_id or f[1]
+        elif sid == "SCH":
+            # SIU appointment timing: SCH-11 start, SCH-12 end (illustrative binding).
+            if len(f) > 11 and f[11]:
+                msg.fields["appointment_start"] = f[11]
+            if len(f) > 12 and f[12]:
+                msg.fields["appointment_end"] = f[12]
     return msg
 
 
+def _set_idx(seg: list[str], idx: int, value: str) -> None:
+    while len(seg) <= idx:
+        seg.append("")
+    seg[idx] = value
+
+
 def build(message_type: str, referral_id: str, order_status: str | None = None,
-          control_id: str | None = None) -> str:
-    """Build a minimal v2 message for the given 360X transaction."""
+          control_id: str | None = None, appointment_start: str | None = None,
+          *, appointment_end: str | None = None, note: str | None = None,
+          accepting_provider: str | None = None, status_reason: str | None = None,
+          period_end: str | None = None) -> str:
+    """Build a minimal v2 message for the given 360X transaction.
+
+    For SIU scheduling messages (PCC-60/61) an `appointment_start`/`appointment_end`
+    (HL7 v2 ts or ISO-8601) is carried in an SCH segment so the inbound bridge can
+    build an Appointment.
+
+    Reply content (the degraded 360X side of the crosswalk):
+      `accepting_provider` -> ORC-12, `period_end` -> ORC-15, `status_reason` ->
+      ORC-16, and `note` -> an NTE segment. Field bindings are illustrative —
+      validate against 360X Vol. 2.
+    """
     control_id = control_id or f"ADP{_ts()}"
     msh = "|".join([
         "MSH", "^~\\&", "OHIA-360ODE-ADAPTER", "OHIA",
@@ -78,5 +115,19 @@ def build(message_type: str, referral_id: str, order_status: str | None = None,
     orc_status = order_status or ""
     # ORC-1 order control; map by message
     order_control = "SC" if message_type.startswith("OSU") else "NW"
-    segs.append("|".join(["ORC", order_control, referral_id, "", "", orc_status]))
+    orc = ["ORC", order_control, referral_id, "", "", orc_status]
+    if accepting_provider:
+        _set_idx(orc, 12, accepting_provider)
+    if period_end:
+        _set_idx(orc, 15, period_end)
+    if status_reason:
+        _set_idx(orc, 16, status_reason)
+    segs.append("|".join(orc))
+    if message_type.startswith("SIU"):
+        sch = ["SCH"] + [""] * 12
+        sch[11] = appointment_start or ""
+        sch[12] = appointment_end or ""
+        segs.append("|".join(sch))
+    if note:
+        segs.append("|".join(["NTE", "1", "", note]))
     return "\r".join(segs) + "\r"

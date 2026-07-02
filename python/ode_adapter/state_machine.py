@@ -58,3 +58,43 @@ def appointment_event(no_show: bool = False) -> OutboundDecision:
     if no_show:
         return OutboundDecision("PCC-61", None, False, None)
     return OutboundDecision("PCC-60", None, False, None)
+
+
+# --------------------------------------------------------------------------- #
+# Reply ingestion (360X -> COW/FHIR) — the mirror direction.
+#
+# When *this* side initiated the referral, the peer's reply transactions arrive
+# inbound and must be projected onto the COW Task/Request state. This is the
+# direction-agnostic core: the same table serves the dental harness (medical peer
+# replies) and the medical harness (dental peer replies). See the crosswalk.
+# --------------------------------------------------------------------------- #
+@dataclass
+class ReplyDecision:
+    task_status: str            # resulting Task.status
+    business_status: str        # COW dental business-status code
+    request_status: str | None  # ServiceRequest.status to apply, if it changes
+    needs_document: bool        # whether a C-CDA consultation note is expected
+    kind: str                   # "status" | "outcome" | "interim" | "appointment" | "noshow"
+
+
+def reply_to_fhir(transaction: str, order_status: str | None = None
+                  ) -> ReplyDecision | None:
+    """Map an inbound reply 360X transaction to a COW Task/Request state change."""
+    if transaction == "PCC-56":
+        if (order_status or "").upper() == "CA":
+            return ReplyDecision("rejected", "declined", "revoked", False, "status")
+        return ReplyDecision("accepted", "accepted", "active", False, "status")
+    if transaction == "PCC-57":
+        return ReplyDecision("completed", "outcome-final", "completed", True, "outcome")
+    if transaction == "PCC-59":
+        return ReplyDecision("in-progress", "interim-results", "active", True, "interim")
+    if transaction == "PCC-60":
+        return ReplyDecision("in-progress", "appointment-booked", "active", False,
+                             "appointment")
+    if transaction == "PCC-61":
+        return ReplyDecision("in-progress", "appointment-noshow", "active", False,
+                             "noshow")
+    return None
+
+
+REPLY_TRANSACTIONS = ("PCC-56", "PCC-57", "PCC-59", "PCC-60", "PCC-61")

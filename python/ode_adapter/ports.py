@@ -30,8 +30,31 @@ class FhirBackend(ABC):
 
     @abstractmethod
     def update_task_status(self, task_id: str, status: str,
-                           reason: str | None = None) -> dict:
-        """Transition a Task (e.g. -> cancelled on inbound PCC-58)."""
+                           reason: str | None = None,
+                           business_status: str | None = None,
+                           outputs: list[dict] | None = None,
+                           *, owner: str | dict | None = None,
+                           status_reason: dict | None = None,
+                           note: str | None = None,
+                           period_end: str | None = None) -> dict:
+        """Transition a Task (e.g. -> cancelled on inbound PCC-58).
+
+        COW subset: `business_status` sets Task.businessStatus (granular 360X
+        progress) and `outputs` becomes Task.output (result/outcome references).
+
+        Reply content (all optional, backward compatible):
+          `owner`         -> Task.owner (accepting provider; str ref or Reference)
+          `status_reason` -> Task.statusReason (coded CodeableConcept; overrides
+                             the free-text `reason`)
+          `note`          -> appended to Task.note (acknowledgment / comment)
+          `period_end`    -> Task.restriction.period.end (expected timeframe)
+        """
+
+    def update_request_status(self, request_id: str, status: str,
+                              reason: str | None = None) -> dict:
+        """Transition a ServiceRequest (COW authorization lifecycle:
+        active -> completed/revoked). Optional; default is a no-op echo."""
+        return {"resourceType": "ServiceRequest", "id": request_id, "status": status}
 
     @abstractmethod
     def get_task(self, task_id: str) -> dict:
@@ -41,8 +64,15 @@ class FhirBackend(ABC):
         """Result resources for a completed/updated Task. Optional."""
         return []
 
+    def find_by_referral(self, referral_id: str) -> list[dict]:
+        """Return the resources the bridge wrote for this referral episode, so a
+        harness 'inbox' can read the FHIR (not just echo a bundle). Optional;
+        default empty (the engine falls back to its per-episode cache)."""
+        return []
+
     def watch_tasks(self, handler: Callable[[dict], None]) -> None:
-        """Subscribe to Task changes (FHIR Subscriptions) or poll. Optional."""
+        """Subscribe to Task changes (FHIR Subscriptions) or poll. Optional.
+        Out of scope per the crosswalk; the bridge is message-driven."""
         raise NotImplementedError(f"{self.name} does not implement watch_tasks")
 
 

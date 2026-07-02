@@ -12,7 +12,7 @@ ODE resources. Reuse the published C-CDA ⟷ US Core mappings.
 | C-CDA section (LOINC) | FHIR resource |
 |---|---|
 | Problems (11450-4) | Condition |
-| Medications (10160-0) | MedicationRequest |
+| Medications (10160-0) | MedicationRequest (RxNorm) — the current medication list; rides in `ServiceRequest.supportingInfo` / `Task.input` |
 | Allergies (48765-2) | AllergyIntolerance |
 | Results (30954-2) | Observation / DiagnosticReport |
 | Procedures (47519-4) | Procedure |

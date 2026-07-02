@@ -1,5 +1,13 @@
-# Connectathon-in-a-box: a FHIR server + the Python adapter.
-# Usage:  docker compose -f docker/docker-compose.yml up --build
+# Connectathon-in-a-box: a live FHIR server + the Python bridge + the harness UI.
+#
+# Usage:
+#   docker compose -f docker/docker-compose.yml up --build
+#   open http://localhost:4000        # dual-persona harness (dental + medical)
+#   HAPI FHIR:  http://localhost:8080/fhir
+#
+# The bridge runs with DRY_RUN=false, so every 360X->FHIR conversion is *written to
+# HAPI* and the harness "inbox" reads it back from the server (not an echo). This is
+# the real closed loop described in spec/mapping/360x-cow-crosswalk.md.
 services:
   hapi:
     image: hapiproject/hapi:latest
@@ -19,5 +27,19 @@ services:
       ODE_ADAPTER_IHE_CODEC: json-envelope
       ODE_ADAPTER_IHE_TRANSPORT: capture
       ODE_ADAPTER_DRY_RUN: "false"
+
+  # Zero-dependency Node harness UI (both personas). Mounts the repo so it can reuse
+  # the canonical sample C-CDA under python/samples without a build step.
+  harness-ui:
+    image: node:20-alpine
+    working_dir: /repo/node
+    command: node server.js
+    volumes:
+      - ..:/repo
+    depends_on: [adapter-python]
+    ports: ["4000:4000"]
+    environment:
+      ADAPTER_URL: http://adapter-python:8000
+      PORT: "4000"
 
   # java and dotnet services to be added as they reach a runnable state (Phase 3).

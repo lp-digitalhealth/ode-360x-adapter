@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text;
 using System.Text.Json.Nodes;
 using Ode.Adapter.Ports;
@@ -28,21 +29,70 @@ public class GenericR4Backend : IFhirBackend
         return PostJson(BaseUrl, bundle, "application/fhir+json");
     }
 
-    public virtual JsonObject UpdateTaskStatus(string taskId, string status, string? reason = null)
+    public virtual JsonObject UpdateTaskStatus(string taskId, string status, string? reason = null,
+        string? businessStatus = null, JsonArray? outputs = null, JsonNode? owner = null,
+        JsonObject? statusReason = null, string? note = null, string? periodEnd = null)
     {
+        var statusReasonVal = statusReason
+            ?? (reason != null ? new JsonObject { ["text"] = reason } : null);
+        var ownerVal = OwnerVal(owner);
         if (DryRun)
-            return new JsonObject { ["resourceType"] = "Task", ["id"] = taskId, ["status"] = status };
+        {
+            var task = new JsonObject { ["resourceType"] = "Task", ["id"] = taskId, ["status"] = status };
+            if (statusReasonVal != null) task["statusReason"] = JsonX.Clone(statusReasonVal);
+            if (businessStatus != null) task["businessStatus"] = Cow.BusinessStatusConcept(businessStatus);
+            if (ownerVal != null) task["owner"] = ownerVal.DeepClone();
+            if (note != null) task["note"] = new JsonArray { new JsonObject { ["text"] = note } };
+            if (periodEnd != null)
+                task["restriction"] = new JsonObject { ["period"] = new JsonObject { ["end"] = periodEnd } };
+            if (outputs != null) task["output"] = (JsonArray)outputs.DeepClone();
+            return task;
+        }
         var patch = new JsonArray
         {
             new JsonObject { ["op"] = "replace", ["path"] = "/status", ["value"] = status }
         };
-        if (reason != null)
-            patch.Add(new JsonObject
-            {
-                ["op"] = "add", ["path"] = "/statusReason",
-                ["value"] = new JsonObject { ["text"] = reason }
-            });
+        if (statusReasonVal != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/statusReason", ["value"] = JsonX.Clone(statusReasonVal) });
+        if (businessStatus != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/businessStatus", ["value"] = Cow.BusinessStatusConcept(businessStatus) });
+        if (ownerVal != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/owner", ["value"] = ownerVal.DeepClone() });
+        if (note != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/note", ["value"] = new JsonArray { new JsonObject { ["text"] = note } } });
+        if (periodEnd != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/restriction", ["value"] = new JsonObject { ["period"] = new JsonObject { ["end"] = periodEnd } } });
+        if (outputs != null)
+            patch.Add(new JsonObject { ["op"] = "add", ["path"] = "/output", ["value"] = (JsonArray)outputs.DeepClone() });
         var req = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BaseUrl}/Task/{taskId}")
+        {
+            Content = new StringContent(patch.ToJsonString(), Encoding.UTF8, "application/json-patch+json")
+        };
+        var resp = Http.Send(req);
+        resp.EnsureSuccessStatusCode();
+        return (JsonObject)JsonNode.Parse(Read(resp))!;
+    }
+
+    private static JsonNode? OwnerVal(JsonNode? owner)
+    {
+        if (owner == null) return null;
+        var s = JsonX.Str(owner);
+        return s != null ? new JsonObject { ["reference"] = s } : owner;
+    }
+
+    public virtual JsonObject UpdateRequestStatus(string requestId, string status, string? reason = null)
+    {
+        if (DryRun)
+        {
+            var sr = new JsonObject { ["resourceType"] = "ServiceRequest", ["id"] = requestId, ["status"] = status };
+            if (reason != null) sr["_status_reason"] = reason;
+            return sr;
+        }
+        var patch = new JsonArray
+        {
+            new JsonObject { ["op"] = "replace", ["path"] = "/status", ["value"] = status }
+        };
+        var req = new HttpRequestMessage(new HttpMethod("PATCH"), $"{BaseUrl}/ServiceRequest/{requestId}")
         {
             Content = new StringContent(patch.ToJsonString(), Encoding.UTF8, "application/json-patch+json")
         };
@@ -58,6 +108,28 @@ public class GenericR4Backend : IFhirBackend
         var resp = Http.Send(new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/Task/{taskId}"));
         resp.EnsureSuccessStatusCode();
         return (JsonObject)JsonNode.Parse(Read(resp))!;
+    }
+
+    public virtual List<JsonObject> FindByReferral(string referralId)
+    {
+        var outList = new List<JsonObject>();
+        if (DryRun) return outList;
+        var ident = $"{Config.SysReferralId}|{referralId}";
+        foreach (var rtype in new[] { "Task", "ServiceRequest" })
+        {
+            // `referral-id` is the contract's token search param; `identifier` is the fallback.
+            var url = $"{BaseUrl}/{rtype}?referral-id={Uri.EscapeDataString(ident)}" +
+                      $"&identifier={Uri.EscapeDataString(ident)}&_include=*&_revinclude=*";
+            var resp = Http.Send(new HttpRequestMessage(HttpMethod.Get, url));
+            if (resp.StatusCode != HttpStatusCode.OK) continue;
+            var body = JsonNode.Parse(Read(resp)) as JsonObject;
+            foreach (var e in JsonX.Arr(body?["entry"]) ?? new JsonArray())
+            {
+                var res = JsonX.Obj((e as JsonObject)?["resource"]);
+                if (res != null) outList.Add(res);
+            }
+        }
+        return outList;
     }
 
     protected static JsonObject PostJson(string url, JsonNode body, string contentType)

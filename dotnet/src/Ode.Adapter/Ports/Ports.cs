@@ -13,10 +13,22 @@ public interface IFhirBackend
     /// <summary>Persist a transaction Bundle; return a transaction-response Bundle.</summary>
     JsonObject SubmitReferralBundle(JsonObject bundle);
 
-    /// <summary>Transition a Task (e.g. cancelled on inbound PCC-58).</summary>
-    JsonObject UpdateTaskStatus(string taskId, string status, string? reason = null);
+    /// <summary>Transition a Task, carrying the reply content (businessStatus, output,
+    /// owner, statusReason, note, restriction.period). Optional args in the same order
+    /// as generic_r4.update_task_status.</summary>
+    JsonObject UpdateTaskStatus(string taskId, string status, string? reason = null,
+                                string? businessStatus = null, JsonArray? outputs = null,
+                                JsonNode? owner = null, JsonObject? statusReason = null,
+                                string? note = null, string? periodEnd = null);
+
+    /// <summary>Transition the ServiceRequest lifecycle (e.g. completed / revoked).</summary>
+    JsonObject UpdateRequestStatus(string requestId, string status, string? reason = null);
 
     JsonObject GetTask(string taskId);
+
+    /// <summary>Live read: the resources the bridge wrote for a referral (harness inbox).
+    /// Dry-run returns empty (the engine uses its per-episode cache).</summary>
+    List<JsonObject> FindByReferral(string referralId) => new();
 }
 
 /// <summary>Packaging port: wire bytes/object &lt;-&gt; envelope (XDM, XDR, JSON).</summary>

@@ -55,6 +55,68 @@ app.MapPost("/ode/task-event", (JsonObject body) =>
     }
 });
 
+// POST a dental-initiated referral intake -> outbound 360X PCC-55 (Referral Request).
+// Body is the rich ReferralInitiation shape (referral_id, direction, patient, coverage,
+// referring_provider, rendering_provider, service, diagnoses, medications, ...).
+app.MapPost("/ode/referral", (JsonObject body) =>
+{
+    try
+    {
+        var referralId = JsonX.Str(body["referral_id"])
+                         ?? throw new ArgumentException("missing 'referral_id'");
+        var result = adapter.HandleReferralInitiation(referralId, body,
+            JsonX.Str(body["sender"]), JsonX.Str(body["recipient"]));
+        return Results.Text(ToJson(result), "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// POST an outbound scheduling event -> PCC-60 Appointment / PCC-61 No-Show.
+app.MapPost("/ode/appointment-event", (JsonObject body) =>
+{
+    try
+    {
+        var referralId = JsonX.Str(body["referral_id"])
+                         ?? throw new ArgumentException("missing 'referral_id'");
+        var noShow = body["no_show"] is JsonValue nv && nv.TryGetValue<bool>(out var ns) && ns;
+        var result = adapter.HandleAppointmentEvent(referralId, noShow,
+            JsonX.Str(body["appointment_start"]), JsonX.Str(body["appointment_end"]),
+            JsonX.Str(body["location"]), JsonX.Str(body["provider"]),
+            JsonX.Str(body["appt_type"]), JsonX.Str(body["reason"]), JsonX.Str(body["reschedule"]));
+        return Results.Text(ToJson(result), "application/json");
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { error = ex.Message });
+    }
+});
+
+// GET the FHIR a PMS/EHR would read for a referral (live find-by-referral, else the
+// per-episode dry-run cache the bridge accumulated).
+app.MapGet("/episodes/{referralId}/inbox", (string referralId) =>
+{
+    var live = adapter.Fhir.FindByReferral(referralId);
+    var ep = adapter.Store.Get(referralId);
+    var resources = new JsonArray();
+    var source = live.Count > 0 ? "fhir-server" : "episode-cache";
+    if (live.Count > 0)
+        foreach (var r in live) resources.Add(JsonX.Clone(r));
+    else if (ep != null)
+        foreach (var r in ep.Inbox) resources.Add(JsonX.Clone(r));
+    var o = new JsonObject
+    {
+        ["referral_id"] = referralId,
+        ["source"] = source,
+        ["status"] = ep?.Status,
+        ["business_status"] = ep?.BusinessStatus,
+        ["resources"] = resources,
+    };
+    return Results.Text(o.ToJsonString(), "application/json");
+});
+
 app.Run();
 
 // Serialize a handler result (Dictionary<string, object?>) to JSON, cloning JsonNodes
@@ -70,6 +132,7 @@ static string ToJson(Dictionary<string, object?> result)
             JsonObject jo => JsonX.Clone(jo),
             JsonArray ja => (JsonArray)JsonNode.Parse(ja.ToJsonString())!,
             List<string> ls => new JsonArray(ls.Select(s => (JsonNode)s!).ToArray()),
+            List<JsonObject> lo => new JsonArray(lo.Select(r => (JsonNode)JsonX.Clone(r)).ToArray()),
             string s => s,
             bool b => b,
             _ => v.ToString(),

@@ -34,4 +34,38 @@ public static class StateMachine
         noShow
             ? new OutboundDecision("PCC-61", null, false, null)
             : new OutboundDecision("PCC-60", null, false, null);
+
+    // ----------------------------------------------------------------------- //
+    // Reply ingestion (360X -> COW/FHIR) — the mirror direction. Used whenever
+    // *this* side initiated the referral and the peer's replies arrive inbound.
+    // ----------------------------------------------------------------------- //
+    /// <summary>An inbound reply projected onto the COW Task/Request state.</summary>
+    public sealed record ReplyDecision(
+        string TaskStatus, string BusinessStatus, string? RequestStatus,
+        bool NeedsDocument, string Kind);
+
+    public static readonly IReadOnlySet<string> ReplyTransactions =
+        new HashSet<string> { "PCC-56", "PCC-57", "PCC-59", "PCC-60", "PCC-61" };
+
+    /// <summary>Map an inbound reply 360X transaction to a COW Task/Request state change.</summary>
+    public static ReplyDecision? ReplyToFhir(string transaction, string? orderStatus = null)
+    {
+        switch (transaction)
+        {
+            case "PCC-56":
+                return (orderStatus ?? "").ToUpperInvariant() == "CA"
+                    ? new ReplyDecision("rejected", "declined", "revoked", false, "status")
+                    : new ReplyDecision("accepted", "accepted", "active", false, "status");
+            case "PCC-57":
+                return new ReplyDecision("completed", "outcome-final", "completed", true, "outcome");
+            case "PCC-59":
+                return new ReplyDecision("in-progress", "interim-results", "active", true, "interim");
+            case "PCC-60":
+                return new ReplyDecision("in-progress", "appointment-booked", "active", false, "appointment");
+            case "PCC-61":
+                return new ReplyDecision("in-progress", "appointment-noshow", "active", false, "noshow");
+            default:
+                return null;
+        }
+    }
 }

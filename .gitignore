@@ -1,3 +1,10 @@
 __pycache__/
 *.pyc
 .venv/
+
+# Python packaging metadata
+*.egg-info/
+
+# .NET build output
+[Bb]in/
+[Oo]bj/
