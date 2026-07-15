@@ -50,6 +50,29 @@ export ODE_ADAPTER_DRY_RUN=false
 export ODE_ADAPTER_ODE_BASE_URL=https://your-ode-native.example.org/fhir
 ```
 
+### FHIR backend plugins
+
+Select the backend with `ODE_ADAPTER_FHIR_BACKEND` (default `generic-r4`).
+
+| Backend | `ODE_ADAPTER_FHIR_BACKEND` | Notes | Extra env vars |
+|---|---|---|---|
+| Generic R4 | `generic-r4` | any conformant R4 server (e.g. HAPI); default | — |
+| OnyxOS | `onyx` | server-specific PUT/upsert loading | — |
+| Medplum | `medplum` | Medplum 5.1.x; OAuth2 SMART Backend Services auth + Medplum-safe search | `ODE_ADAPTER_MEDPLUM_CLIENT_ID`, `ODE_ADAPTER_MEDPLUM_CLIENT_SECRET`, `ODE_ADAPTER_MEDPLUM_TOKEN_URL` (optional; defaults to `<origin>/oauth2/token`) |
+
+The Medplum backend runs the `client_credentials` grant, caches the bearer token
+in-process (refreshing 60s early), retries once on a 401, and sends
+`Authorization: Bearer` on every call. The client secret and token are never logged.
+It is a pure transport adapter — Bundle contents are not filtered or transformed; the
+server's access policy governs what it accepts.
+
+```bash
+export ODE_ADAPTER_FHIR_BACKEND=medplum
+export ODE_ADAPTER_ODE_BASE_URL=https://your-project.medplum.com/fhir/R4
+export ODE_ADAPTER_MEDPLUM_CLIENT_ID=...        # SMART Backend Services client
+export ODE_ADAPTER_MEDPLUM_CLIENT_SECRET=...    # keep out of logs / VCS
+```
+
 ---
 
 ## Architecture
@@ -212,6 +235,7 @@ ode_adapter/
   plugins/
     fhir/generic_r4.py   any conformant R4 server (default)
     fhir/onyx.py         OnyxOS (server-specific loading)
+    fhir/medplum.py      Medplum 5.1.x (OAuth2 backend services + strict search)
     ihe/json_envelope.py default codec + capture transport
     ihe/xdm_zip.py       real XDM ZIP codec (scaffold)
     ihe/direct_smtp.py   Direct/SMTP send (scaffold)
