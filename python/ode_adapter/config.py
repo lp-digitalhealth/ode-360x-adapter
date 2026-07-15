@@ -150,6 +150,13 @@ class Settings:
     fhir_backend: str = os.getenv("ODE_ADAPTER_FHIR_BACKEND", "generic-r4")
     ihe_codec: str = os.getenv("ODE_ADAPTER_IHE_CODEC", "json-envelope")
     ihe_transport: str = os.getenv("ODE_ADAPTER_IHE_TRANSPORT", "capture")
+    # --- Medplum backend (SMART Backend Services / OAuth2 client_credentials) ---
+    # Only used by the `medplum` FHIR backend. Never logged.
+    medplum_client_id: str = os.getenv("ODE_ADAPTER_MEDPLUM_CLIENT_ID", "")
+    medplum_client_secret: str = os.getenv("ODE_ADAPTER_MEDPLUM_CLIENT_SECRET", "")
+    # Optional; when empty the backend derives it from the base URL origin
+    # (<origin>/oauth2/token, stripping the /fhir/R4 FHIR path).
+    medplum_token_url: str = os.getenv("ODE_ADAPTER_MEDPLUM_TOKEN_URL", "")
     # Adapter's own identifier, recorded in Provenance/AuditEvent.
     adapter_id: str = os.getenv("ODE_ADAPTER_ID", "ohia-360ode-adapter")
     # Where the `http` outbound transport POSTs packaged 360X messages — point this
